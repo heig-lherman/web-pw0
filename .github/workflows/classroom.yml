@@ -1,0 +1,72 @@
+name: Autograding Tests
+on:
+  - push
+  - repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Hello world
+        id: hello-world
+        uses: classroom-resources/autograding-io-grader@v1
+        with:
+          test-name: Hello world
+          setup-command: ''
+          command: node hello.js
+          input: ''
+          expected-output: Hello World!
+          comparison-method: regex
+          timeout: 5
+          max-score: 1
+      - name: ESLint hello.js
+        id: eslint-hello-js
+        uses: classroom-resources/autograding-io-grader@v1
+        with:
+          test-name: ESLint hello.js
+          setup-command: npm install
+          command: npx eslint hello.js | wc -l
+          input: ''
+          expected-output: '0'
+          comparison-method: regex
+          timeout: 5
+          max-score: 1
+      - name: ESLint server
+        id: eslint-server
+        uses: classroom-resources/autograding-io-grader@v1
+        with:
+          test-name: ESLint server
+          setup-command: npm install
+          command: npx eslint server.js | wc -l
+          input: ''
+          expected-output: '0'
+          comparison-method: regex
+          timeout: 5
+          max-score: 2
+      - name: ESLint config file
+        id: eslint-config-file
+        uses: classroom-resources/autograding-io-grader@v1
+        with:
+          test-name: ESLint config file
+          setup-command: ''
+          command: ls eslint.*
+          input: ''
+          expected-output: 'eslint.*'
+          comparison-method: regex
+          timeout: 5
+          max-score: 0
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          HELLO-WORLD_RESULTS: '${{steps.hello-world.outputs.result}}'
+          ESLINT-HELLO-JS_RESULTS: '${{steps.eslint-hello-js.outputs.result}}'
+          ESLINT-SERVER_RESULTS: '${{steps.eslint-server.outputs.result}}'
+          ESLINT-CONFIG-FILE_RESULTS: '${{steps.eslint-config-file.outputs.result}}'
+        with:
+          runners: hello-world,eslint-hello-js,eslint-server,eslint-config-file
